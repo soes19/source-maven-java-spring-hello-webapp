@@ -1,0 +1,31 @@
+pipeline {
+  agent any
+
+  triggers {
+    pollSCM('* * * * *')
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch: 'main', 
+        url: 'https://github.com/soes19/source-maven-java-spring-hello-webapp'
+      }
+    }
+    stage('Build') {
+      steps {
+        sh 'package'
+      }
+    }
+    stage('Test') {
+      steps {
+        sh 'echo TEST?!'
+      }
+    }
+    stage('Deploy') {
+      steps {
+        deploy adapters: [tomcat9(credentialsId: 'admin', url: 'http://3.38.145.235:8080/')], contextPath: null, war: 'path/to/war'
+      }
+    }
+  }
+}
