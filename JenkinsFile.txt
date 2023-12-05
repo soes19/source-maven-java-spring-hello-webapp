@@ -19,7 +19,7 @@ pipeline {
     }
     stage('Test') {
       steps {
-        sh 'echo TEST?!'
+        sh 'echo TEST?22!'
       }
     }
     stage('Deploy') {
