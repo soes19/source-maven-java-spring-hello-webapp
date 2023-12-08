@@ -1,0 +1,56 @@
+pipeline {
+  agent none
+
+  stages {
+    stage('Checkout') {
+      agent any
+      steps {
+        git branch 'main', url 'URL'
+      }
+    }
+    stage('Build') {
+      agent {
+        docker { image 'maven3-openjdk-11' }
+      }
+      steps {
+        sh 'mvn clean package -DskipTests=true'
+      }
+    }
+    stage('Test') {
+      agent {
+        docker { image 'maven3-openjdk-11' }
+      }
+      steps {
+        sh 'mvn test'
+      }
+    }
+    stage('Build Docker Image') {
+      agent any
+      steps {
+        sh 'COMMAND'
+      }
+    }
+    stage('Tag Docker Image') {
+      agent any
+      steps {
+        sh 'COMMAND'
+      }
+    }
+    stage('Publish Docker Image') {
+      agent any
+      steps {
+        withDockerRegistry(credentialsId 'docker-hub-token', url 'httpsindex.docker.iov1') {
+          sh 'COMMAND'
+        }
+      }
+    }
+    stage('Run Docker Container') {
+      agent {
+        docker { image 'dockerdind' }
+      }
+      steps {
+        sh 'docker -H tcpDOCKER_HOST_PRIVATE_IP2375 container run --detach --name CONTAINER_NAME -p 808080 IMAGE$BUILD_NUMBER'
+      }
+    }
+  }
+}
