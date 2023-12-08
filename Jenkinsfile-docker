@@ -5,12 +5,12 @@ pipeline {
     stage('Checkout') {
       agent any
       steps {
-        git branch 'main', url 'URL'
+        git branch: 'main', url: 'https://github.com/soes19/source-maven-java-spring-hello-webapp'
       }
     }
     stage('Build') {
       agent {
-        docker { image 'maven3-openjdk-11' }
+        docker { image 'maven:3-openjdk-11' }
       }
       steps {
         sh 'mvn clean package -DskipTests=true'
@@ -18,7 +18,7 @@ pipeline {
     }
     stage('Test') {
       agent {
-        docker { image 'maven3-openjdk-11' }
+        docker { image 'maven:3-openjdk-11' }
       }
       steps {
         sh 'mvn test'
@@ -27,29 +27,31 @@ pipeline {
     stage('Build Docker Image') {
       agent any
       steps {
-        sh 'COMMAND'
+        sh 'docker image build -t myhello .'
       }
     }
     stage('Tag Docker Image') {
       agent any
       steps {
-        sh 'COMMAND'
-      }
+        sh 'docker image tag myhello binhyu17/myhello:latest'
+        sh 'docker image tag myhello binhyu17/myhello:$BUILD_NUMBER'
+	}
     }
     stage('Publish Docker Image') {
       agent any
       steps {
-        withDockerRegistry(credentialsId 'docker-hub-token', url 'httpsindex.docker.iov1') {
-          sh 'COMMAND'
+        withDockerRegistry(credentialsId: 'docker-hub-token', url: 'https://index.docker.io/v1/') {
+          sh 'docker image push binhyu17/myhello:$BUILD_NUMBER'
+	  sh 'docker image push binhyu17/myhello:latest'
         }
       }
     }
     stage('Run Docker Container') {
       agent {
-        docker { image 'dockerdind' }
+        docker { image 'docker:dind' }
       }
       steps {
-        sh 'docker -H tcpDOCKER_HOST_PRIVATE_IP2375 container run --detach --name CONTAINER_NAME -p 808080 IMAGE$BUILD_NUMBER'
+        sh 'docker -H tcp://172.31.15.9:2375 container run --detach --name jenkins-docker -p 80:8080 binhyu27/myhello:$BUILD_NUMBER'
       }
     }
   }
