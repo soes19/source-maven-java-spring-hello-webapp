@@ -51,7 +51,7 @@ pipeline {
         docker { image 'docker:dind' }
       }
       steps {
-        sh 'docker -H tcp://172.31.15.9:2375 container run --detach --name jenkins-docker -p 80:8080 binhyu17/myhello:$BUILD_NUMBER'
+        sh 'docker -H tcp://172.31.15.9:2375 container run --detach --name myhello -p 80:8080 binhyu17/myhello:$BUILD_NUMBER'
       }
     }
   }
