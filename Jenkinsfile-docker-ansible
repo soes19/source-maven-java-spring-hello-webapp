@@ -27,22 +27,22 @@ pipeline {
     stage('Build Docker Image') {
       agent any
       steps {
-        sh 'docker image build -t playbooktest .'
+        sh 'docker image build -t myweb .'
       }
     }
     stage('Tag Docker Image') {
       agent any
       steps {
-         sh 'docker image tag playbooktest binhyu17/playbooktest:latest'
-        sh 'docker image tag playbooktest binhyu17/playbooktest:$BUILD_NUMBER'
+         sh 'docker image tag myweb binhyu17/myweb:latest'
+        sh 'docker image tag myweb binhyu17/myweb:$BUILD_NUMBER'
       }
     }
     stage('Publish Docker Image') {
       agent any
       steps {
         withDockerRegistry(credentialsId: 'docker-hub-token', url: 'https://index.docker.io/v1/') {
-           sh 'docker image push binhyu17/playbooktest:$BUILD_NUMBER'
-	  sh 'docker image push binhyu17/playbooktest:latest'
+           sh 'docker image push binhyu17/myweb:$BUILD_NUMBER'
+	  sh 'docker image push binhyu17/myweb:latest'
         }
       }
     }
