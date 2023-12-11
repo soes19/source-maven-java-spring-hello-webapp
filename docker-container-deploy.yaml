@@ -6,7 +6,7 @@
   - name: Create & Start Container
     docker_container:
       name: myweb
-      image: "binhyu17/myhello:{{ lookup('env','BUILD_NUMBER') }}"
+      image: "binhyu17/myhello"
       state: started
       ports:
       - "80:8080"
