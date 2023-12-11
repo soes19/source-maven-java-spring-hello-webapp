@@ -1,0 +1,61 @@
+pipeline {
+  agent none
+
+  stages {
+    stage('Checkout') {
+      agent any
+      steps {
+        git branch: 'main', url: 'https://github.com/soes19/source-maven-java-spring-hello-webapp'
+      }
+    }
+    stage('Build') {
+      agent {
+        docker { image 'maven:3-openjdk-11' }
+      }
+      steps {
+        sh 'mvn clean package -DskipTests=true'
+      }
+    }
+    stage('Test') {
+      agent {
+        docker { image 'maven:3-openjdk-11' }
+      }
+      steps {
+        sh 'mvn test'
+      }
+    }
+    stage('Build Docker Image') {
+      agent any
+      steps {
+        sh 'docker image build -t playbooktest .'
+      }
+    }
+    stage('Tag Docker Image') {
+      agent any
+      steps {
+         sh 'docker image tag playbooktest binhyu17/playbooktest:latest'
+        sh 'docker image tag playbooktest binhyu17/playbooktest:$BUILD_NUMBER'
+      }
+    }
+    stage('Publish Docker Image') {
+      agent any
+      steps {
+        withDockerRegistry(credentialsId: 'docker-hub-token', url: 'https://index.docker.io/v1/') {
+           sh 'docker image push binhyu17/playbooktest:$BUILD_NUMBER'
+	  sh 'docker image push binhyu17/playbooktest:latest'
+        }
+      }
+    }
+    stage('Run Docker Container') {
+      agent {
+        docker { 
+          image 'binhyu17/jenkins-ansible'
+          args '-u 0:0 -e DOCKER_HOST=tcp://172.31.15.9:2375'
+        }
+      }
+      steps {
+        ansiblePlaybook(playbook: 'docker-container-deploy.yaml')
+      }
+    }
+  }
+}
