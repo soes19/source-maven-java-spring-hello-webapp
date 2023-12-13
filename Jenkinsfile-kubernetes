@@ -41,7 +41,7 @@ spec:
     stage('Checkout') {
       steps {
         container('maven') {
-          git branch: 'main', url: 'https://github.com/soes19/jenkins-k8s-argo'
+          git branch: 'main', url: 'https://github.com/soes19/source-maven-java-spring-hello-webapp'
         }
       }
     }
@@ -62,7 +62,7 @@ spec:
     stage('Build & Tag & Push Docker Image') {
       steps {
         container('kaniko') {
-          sh 'executor --context=dir:///home/jenkins/agent/workspace/kube_pipeline/ --destination=binhyu17/myweb:$BUILD_NUMBER --destination=<IMAGE>:latest'
+          sh 'executor --context=dir:///home/jenkins/agent/workspace/kube_pipeline/ --destination=binhyu17/myweb:$BUILD_NUMBER --destination=binhyu17/myweb:latest'
         }
       }
     }
@@ -73,7 +73,7 @@ spec:
         githubId = 'soes19' //c1t1d0s7 
         githubRepo = 'jenkins-k8s-argo' //jenkins-kube-deploy
         githubURL = "https://github.com/${githubId}/${githubRepo}.git"
-        dockerhubId = 'soes19	' //c1t1d0s7
+        dockerhubId = 'soes19' //c1t1d0s7
         dockerhubRepo = 'myweb' //hello-world
       }
       steps {
@@ -93,10 +93,3 @@ spec:
     }
   }
 }
-
-$version = (Invoke-RestMethod https://api.github.com/repos/argoproj/argo-cd/releases/latest).tag_name
-$url = "https://github.com/argoproj/argo-cd/releases/download/" + $version + "/argocd-windows-amd64.exe"
-$output = "argocd.exe"
-
-Invoke-WebRequest -Uri $url -OutFile $output
-[출처] ArgoCD 뜻 및 윈도우에서 설치 방법, ArgoCD CLI|작성자 Universe
