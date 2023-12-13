@@ -12,6 +12,12 @@ spec:
     - sleep
     args:
     - infinity
+  - name: git
+    image: alpine/git
+    command:
+    - sleep
+    args:
+    - infinity
   - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
     command:
@@ -35,7 +41,7 @@ spec:
     stage('Checkout') {
       steps {
         container('maven') {
-          git branch: 'main', url: 'https://github.com/soes19/source-maven-java-spring-hello-webapp'
+          git branch: 'main', url: 'https://github.com/soes19/jenkins-k8s-argo'
         }
       }
     }
@@ -56,9 +62,41 @@ spec:
     stage('Build & Tag & Push Docker Image') {
       steps {
         container('kaniko') {
-          sh 'executor --context=dir://$WORKSPACE --destination=binhyu17/myweb:$BUILD_NUMBER --destination=binhyu17/myweb:latest'
+          sh 'executor --context=dir:///home/jenkins/agent/workspace/kube_pipeline/ --destination=binhyu17/myweb:$BUILD_NUMBER --destination=<IMAGE>:latest'
+        }
+      }
+    }
+    stage('Update K8s Manifests & Push') {
+      environment {
+        githubUser = 'minji' //Ryan Jang
+        githubEmail = 'soes19@naver.com' //c1t1d0s7@example.com
+        githubId = 'soes19' //c1t1d0s7 
+        githubRepo = 'jenkins-k8s-argo' //jenkins-kube-deploy
+        githubURL = "https://github.com/${githubId}/${githubRepo}.git"
+        dockerhubId = 'soes19	' //c1t1d0s7
+        dockerhubRepo = 'myweb' //hello-world
+      }
+      steps {
+        container('git') {
+          git branch: 'main', credentialsId: 'github-credential', url: "${githubURL}"
+          sh "git config --global --add safe.directory ${workspace}"
+          sh "git config --global user.name ${githubUser}"
+          sh "git config --global user.email ${githubEmail}"
+          sh 'sed -i "s/image:.*/image: ${dockerhubId}\\/${dockerhubRepo}:${BUILD_NUMBER}/g" deployment.yaml'
+          sh 'git add deployment.yaml'
+          sh 'git commit -m "Jenkins Build Number - ${BUILD_NUMBER}"'
+          withCredentials([gitUsernamePassword(credentialsId: 'github-credential', gitToolName: 'Default')]) {
+            sh 'git push --set-upstream origin main'
+          }
         }
       }
     }
   }
 }
+
+$version = (Invoke-RestMethod https://api.github.com/repos/argoproj/argo-cd/releases/latest).tag_name
+$url = "https://github.com/argoproj/argo-cd/releases/download/" + $version + "/argocd-windows-amd64.exe"
+$output = "argocd.exe"
+
+Invoke-WebRequest -Uri $url -OutFile $output
+[출처] ArgoCD 뜻 및 윈도우에서 설치 방법, ArgoCD CLI|작성자 Universe
